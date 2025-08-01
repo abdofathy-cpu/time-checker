@@ -1,6 +1,242 @@
-git clone https://github.com/yourusername/your-repo-name.git
-cd your-repo-name
-# Create index.html file and paste the code
-git add index.html
-git commit -m "Add simple time checker app"
-git push origin main
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            font-weight: 300;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .time-display {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 30px 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .date-display {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .timezone-display {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .format-toggle {
+            margin-top: 20px;
+        }
+
+        .format-toggle label {
+            font-size: 0.9rem;
+            margin-right: 10px;
+        }
+
+        .format-toggle input[type="checkbox"] {
+            transform: scale(1.2);
+            margin-left: 5px;
+        }
+
+        @media (max-width: 480px) {
+            .time-display {
+                font-size: 2.2rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏰ Time Checker</h1>
+        
+        <div class="time-display" id="timeDisplay">
+            00:00:00
+        </div>
+        
+        <div class="date-display" id="dateDisplay">
+            Loading...
+        </div>
+        
+        <div class="timezone-display" id="timezoneDisplay">
+            Your timezone
+        </div>
+        
+        <div class="controls">
+            <button onclick="toggleAutoUpdate()" id="toggleBtn">
+                ⏸️ Pause
+            </button>
+            <button onclick="refreshTime()">
+                🔄 Refresh
+            </button>
+        </div>
+        
+        <div class="format-toggle">
+            <label for="format24">
+                <input type="checkbox" id="format24" onchange="toggleTimeFormat()">
+                24-hour format
+            </label>
+        </div>
+    </div>
+
+    <script>
+        let autoUpdate = true;
+        let use24Hour = false;
+        let updateInterval;
+
+        function updateTime() {
+            const now = new Date();
+            
+            // Time formatting
+            let timeString;
+            if (use24Hour) {
+                timeString = now.toLocaleTimeString('en-US', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            } else {
+                timeString = now.toLocaleTimeString('en-US', {
+                    hour12: true,
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            }
+            
+            // Date formatting
+            const dateString = now.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // Timezone
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            
+            // Update displays
+            document.getElementById('timeDisplay').textContent = timeString;
+            document.getElementById('dateDisplay').textContent = dateString;
+            document.getElementById('timezoneDisplay').textContent = timezone;
+        }
+
+        function toggleAutoUpdate() {
+            const toggleBtn = document.getElementById('toggleBtn');
+            
+            if (autoUpdate) {
+                clearInterval(updateInterval);
+                toggleBtn.textContent = '▶️ Resume';
+                autoUpdate = false;
+            } else {
+                startAutoUpdate();
+                toggleBtn.textContent = '⏸️ Pause';
+                autoUpdate = true;
+            }
+        }
+
+        function refreshTime() {
+            updateTime();
+        }
+
+        function toggleTimeFormat() {
+            use24Hour = document.getElementById('format24').checked;
+            updateTime();
+        }
+
+        function startAutoUpdate() {
+            updateInterval = setInterval(updateTime, 1000);
+        }
+
+        // Initialize the app
+        function init() {
+            updateTime();
+            startAutoUpdate();
+        }
+
+        // Start the app when page loads
+        window.addEventListener('load', init);
+        
+        // Update time when page becomes visible again
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && autoUpdate) {
+                updateTime();
+            }
+        });
+    </script>
+</body>
+</html>
